@@ -1,0 +1,416 @@
+{
+	"info": {
+		"_postman_id": "06815446-13a1-430c-b998-6b31f2b95540",
+		"name": "Suggestions",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25460693"
+	},
+	"item": [
+		{
+			"name": "Is Anna really here?",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//парсинг JSON",
+							"var jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"/*pm.test(\"length of\", function () {",
+							"    pm.expect(jsonData.suggestions).to.have.lengthOf(5);",
+							"});*/",
+							"",
+							"pm.test(\"suggestions — это массив\", function () {",
+							"    pm.expect(jsonData.suggestions).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"проверим дочерний объект\", function () {",
+							"    pm.expect(jsonData.suggestions[0].data).to.be.an('object');",
+							"});",
+							"",
+							"//проверяем все полученные результаты и находим Анну",
+							"pm.test('Имя Анна в результатах есть', function() {",
+							"    var count = 0",
+							"    for(i=0; i < jsonData.suggestions.length; i++) {",
+							"        ",
+							"        console.log(jsonData);",
+							"        console.log(jsonData.suggestions[i].value);",
+							"        //pm.expect(jsonData.suggestions[i].value).to.be.equal('Анна');",
+							"        if (jsonData.suggestions[i].value === 'Анна'){",
+							"            count++;  ",
+							"        }",
+							"        console.log(count);",
+							"    };",
+							"    pm.expect(count).to.be.equal(1);    ",
+							"",
+							"    ",
+							"    });",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{Token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<req>\r\n    <query>Ан</query>\r\n</req>\r\n"
+				},
+				"url": {
+					"raw": "https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/fio",
+					"protocol": "https",
+					"host": [
+						"suggestions",
+						"dadata",
+						"ru"
+					],
+					"path": [
+						"suggestions",
+						"api",
+						"4_1",
+						"rs",
+						"suggest",
+						"fio"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "JSON schema validation",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ответ имеет тело и  это JSON",
+							"pm.test(\"Response  is valid and has a body\", function () {",
+							"     pm.response.to.be.ok;",
+							"     pm.response.to.be.withBody;",
+							"     pm.response.to.be.json; ",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"",
+							"//объявляем JSON схему",
+							"var schema = {",
+							"    \"type\": \"object\",",
+							"    \"title\": \"Json схема ответа на запрос подсказки\",",
+							"    \"required\": [",
+							"        \"suggestions\"",
+							"    ],",
+							"    \"properties\": {",
+							"        \"suggestions\": {",
+							"            \"type\": \"array\",",
+							"            \"minItem\": 1,          // минимум один элемент в массиве ответа",
+							"            \"uniqueItems\": true,   // каждый элемент массива уникален",
+							"            \"items\": {",
+							"                \"type\": \"object\",",
+							"                \"title\": \"A Schema\",",
+							"                \"required\": [",
+							"                    \"value\",",
+							"                    \"unrestricted_value\",",
+							"                    \"data\"",
+							"                ],",
+							"                \"properties\": {",
+							"                    \"value\": {",
+							"                        \"type\": \"string\"",
+							"                    },",
+							"                    \"unrestricted_value\": {",
+							"                        \"type\": \"string\"",
+							"                    },",
+							"                    \"data\": {",
+							"                        \"type\": \"object\",",
+							"                        \"required\": [",
+							"                            \"surname\",",
+							"                            \"name\",",
+							"                            \"patronymic\",",
+							"                            \"gender\"",
+							"                        ],",
+							"                        \"properties\": {",
+							"                            \"surname\": {",
+							"                                \"type\": [\"string\", \"null\"]",
+							"                            },",
+							"                            \"name\": {",
+							"                                \"type\": [\"string\", \"null\"]",
+							"                            },",
+							"                            \"patronymic\": {",
+							"                                \"type\": [\"string\", \"null\"]",
+							"                            },",
+							"                            \"gender\": {",
+							"                                \"type\": \"string\",",
+							"                                \"enum\": [\"MALE\", \"FEMALE\"] // только два допустимых варианта значения",
+							"                            },",
+							"                        \"additionalProperties\": true      // дополнительные properties допускаются",
+							"                            ",
+							"                        }",
+							"                    ",
+							"                    }",
+							"                },",
+							"                ",
+							"            },",
+							"            ",
+							"        ",
+							"        }",
+							"    },",
+							"   ",
+							"}",
+							"",
+							"",
+							"pm.test(\"JSON schema is valid using to.have/jsonSchema\", () => {",
+							"    pm.response.to.have.jsonSchema(schema);",
+							"});",
+							"",
+							"//проверяем ответ на соотвтетсвие JSON схеме с помощью валидатор tv4",
+							"pm.test(\"JSON schema is valid using tv4\", function () {",
+							"    pm.expect(tv4.validate(jsonData, schema)).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{Token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<req>\r\n    <query>А</query>\r\n</req>\r\n"
+				},
+				"url": {
+					"raw": "https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/fio",
+					"protocol": "https",
+					"host": [
+						"suggestions",
+						"dadata",
+						"ru"
+					],
+					"path": [
+						"suggestions",
+						"api",
+						"4_1",
+						"rs",
+						"suggest",
+						"fio"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Tests for xml response",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// конвертировали xml в json",
+							"var jsonData = xml2Json(responseBody);",
+							"",
+							"pm.test(\"suggestions — это массив\", function () {",
+							"    pm.expect(jsonData.SuggestResponse.suggestions).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"В ответе есть фамилия Малахов\", function () {",
+							"    pm.expect(jsonData).to.nested.include({'SuggestResponse.suggestions[2].value': \"Андрей Малахов\"});",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml"
+					},
+					{
+						"key": "Accept",
+						"value": "application/xml"
+					},
+					{
+						"key": "Authorization",
+						"value": "Token 793d2830a6360a1569c8e7b9dd1afeb2f57ffa77"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<req>\r\n    <query>Андрей Мал</query>\r\n</req>"
+				},
+				"url": {
+					"raw": "https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/fio",
+					"protocol": "https",
+					"host": [
+						"suggestions",
+						"dadata",
+						"ru"
+					],
+					"path": [
+						"suggestions",
+						"api",
+						"4_1",
+						"rs",
+						"suggest",
+						"fio"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Tests with FOR and forEach",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//парсинг JSON",
+							"var jsonData = pm.response.json();",
+							"",
+							"//проверяем, что в ответе вернулся массив",
+							"pm.test(\"suggestions — это массив\", function () {",
+							"    console.log(jsonData);",
+							"    console.log(jsonData.suggestions);",
+							"    pm.expect(jsonData.suggestions).to.be.an('array');",
+							"});",
+							"",
+							"//с помощью цикла FOR проверяем, что все ответы имеют пол = мужской",
+							"for(i=0; i < jsonData.suggestions.length; i++){",
+							"    pm.test('Only male results in object '+ i + ' For', function() {",
+							"        pm.expect(jsonData.suggestions[i].data.gender).to.be.equal('MALE');",
+							"    });",
+							"};",
+							"",
+							"//с помощью цикла FOR проверяем, что все результаты - это имена",
+							"for(i=0; i < jsonData.suggestions.length; i++){",
+							"    pm.test('Only name results in object '+ i + ' For', function() {",
+							"        pm.expect(jsonData.suggestions[i].data.name).to.not.be.null;",
+							"    });",
+							"};",
+							"",
+							"//с помощью структуры forEach проверяем, что все ответы имеют пол = мужской",
+							"jsonData.suggestions.forEach(function(element, i){",
+							"    console.log(jsonData.suggestions);",
+							"    console.log(jsonData.suggestions);",
+							"    pm.test('Only male results in object '+ i + ' forEach', function() {",
+							"        pm.expect(jsonData.suggestions[i].data.gender).to.be.equal('MALE');",
+							"    }); ",
+							"});",
+							"",
+							"//с помощью структуры forEach проверяем, что все результаты - это имена",
+							"jsonData.suggestions.forEach(function(element, i){",
+							"    console.log(jsonData.suggestions);",
+							"    console.log(jsonData.suggestions);",
+							"    pm.test('Only name results in object '+ i + ' forEach', function() {",
+							"        pm.expect(jsonData.suggestions[i].data.name).to.not.be.null;",
+							"    }); ",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Token 793d2830a6360a1569c8e7b9dd1afeb2f57ffa77"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"query\": \"А\",\r\n\"gender\": \"MALE\",\r\n\"parts\": [\"NAME\"]\r\n}"
+				},
+				"url": {
+					"raw": "https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/fio",
+					"protocol": "https",
+					"host": [
+						"suggestions",
+						"dadata",
+						"ru"
+					],
+					"path": [
+						"suggestions",
+						"api",
+						"4_1",
+						"rs",
+						"suggest",
+						"fio"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
